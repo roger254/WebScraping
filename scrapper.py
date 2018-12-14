@@ -13,16 +13,15 @@ def get_url(url):
     return html_
 
 
-html = get_url("http://bit.ly/1Ge96Rw")
+html = get_url("http://www.pythonscraping.com/pages/page3.html")
 bs_obj = BeautifulSoup(html, features='html.parser')
-# .findAll(tag, attributes, recursive=True, text='sample text', limit = > 1, keywords)
-name_list = bs_obj.find_all(
-    'span',
+
+found_objs = bs_obj.find(
+    'table',
     {
-        'class': 'green'
+        'id': 'giftList'
     }
 )
-for name in name_list:
-    print(name.get_text())
 
-
+for child in found_objs.children:
+    print(child)
