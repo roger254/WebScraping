@@ -5,22 +5,24 @@ from bs4 import BeautifulSoup
 
 
 # catch 404 and server error
-def get_title(url):
+def get_url(url):
     try:
-        html = urlopen(url)
-    except HTTPError as e:
+        html_ = urlopen(url)
+    except HTTPError:
         return None
-
-    try:
-        bs_obj = BeautifulSoup(html.read())
-        title_ = bs_obj.body.h1
-    except AttributeError:
-        return None
-    return title_
+    return html_
 
 
-title = get_title('http://www.pythonscraping.com/exercises/exercise1.html')
-if title is None:
-    print('Title could not be found')
-else:
-    print(title)
+html = get_url("http://bit.ly/1Ge96Rw")
+bs_obj = BeautifulSoup(html, features='html.parser')
+# .findAll(tag, attributes, recursive=True, text='sample text', limit = > 1, keywords)
+name_list = bs_obj.find_all(
+    'span',
+    {
+        'class': 'green'
+    }
+)
+for name in name_list:
+    print(name.get_text())
+
+
