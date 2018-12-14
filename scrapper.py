@@ -23,5 +23,5 @@ found_objs = bs_obj.find(
     }
 )
 
-for child in found_objs.children:
+for child in found_objs.descendants:
     print(child)
