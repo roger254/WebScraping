@@ -2,6 +2,7 @@ from urllib.error import HTTPError
 from urllib.request import urlopen
 
 from bs4 import BeautifulSoup
+import re
 
 
 # catch 404 and server error
@@ -15,13 +16,13 @@ def get_url(url):
 
 html = get_url("http://www.pythonscraping.com/pages/page3.html")
 bs_obj = BeautifulSoup(html, features='html.parser')
+expression = re.compile("../img/gifts/img.*.jpg")
 
-found_objs = bs_obj.find(
-    'table',
+images = bs_obj.find_all(
+    'img',
     {
-        'id': 'giftList'
+        'src': expression
     }
 )
-
-for child in found_objs.descendants:
-    print(child)
+for image in images:
+    print(image['src'])
