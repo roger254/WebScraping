@@ -1,8 +1,9 @@
 from urllib.error import HTTPError
 from urllib.request import urlopen
-
 from bs4 import BeautifulSoup
 import re
+import datetime
+import random
 
 
 # catch 404 and server error
@@ -14,15 +15,23 @@ def get_url(url):
     return html_
 
 
-html = get_url("http://www.pythonscraping.com/pages/page3.html")
-bs_obj = BeautifulSoup(html, features='html.parser')
-expression = re.compile("../img/gifts/img.*.jpg")
+# return list of all linked articles
+random.seed(datetime.datetime.now())
 
-images = bs_obj.find_all(
-    'img',
-    {
-        'src': expression
-    }
-)
-for image in images:
-    print(image['src'])
+
+def get_links(article_url):
+    html = get_url("http://en.wikipedia.org" + article_url)
+    bs_obj = BeautifulSoup(html, features='html.parser')
+
+    # search and return only article links i.e '/wiki/sleepers'
+    expression = re.compile("^(/wiki/)((?!:).)*$")
+    body_div = bs_obj.find('div', {'id': 'bodyContent'}).findAll('a', href=expression)
+    return body_div
+
+
+links = get_links('/wiki/Kevin_Bacon')
+while len(links) > 0:
+    # extract the href attribute
+    new_article = links[random.randint(0, len(links) - 1)].attrs['href']
+    print(new_article)
+    links = get_links(new_article)
