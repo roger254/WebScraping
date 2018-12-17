@@ -15,23 +15,25 @@ def get_url(url):
     return html_
 
 
-# return list of all linked articles
-random.seed(datetime.datetime.now())
+# ensure no duplicate links
+pages = set()
 
 
 def get_links(article_url):
+    global pages
     html = get_url("http://en.wikipedia.org" + article_url)
     bs_obj = BeautifulSoup(html, features='html.parser')
 
-    # search and return only article links i.e '/wiki/sleepers'
-    expression = re.compile("^(/wiki/)((?!:).)*$")
-    body_div = bs_obj.find('div', {'id': 'bodyContent'}).findAll('a', href=expression)
-    return body_div
+    expression = re.compile("^(/wiki/)")
+    for link in bs_obj.find_all('a', href=expression):
+        if 'href' in link.attrs:
+            if link.attrs['href'] not in pages:
+                # new page encountered
+                new_page = link.attrs['href']
+                print(new_page)
+                pages.add(new_page)
+                get_links(new_page)
 
 
-links = get_links('/wiki/Kevin_Bacon')
-while len(links) > 0:
-    # extract the href attribute
-    new_article = links[random.randint(0, len(links) - 1)].attrs['href']
-    print(new_article)
-    links = get_links(new_article)
+# start from the home page
+get_links("")
