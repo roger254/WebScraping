@@ -13,7 +13,7 @@ BOT_NAME = 'wiki_spider'
 
 SPIDER_MODULES = ['wiki_spider.spiders']
 NEWSPIDER_MODULE = 'wiki_spider.spiders'
-
+LOG_LEVEL = 'ERROR'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'wiki_spider (+http://www.yourdomain.com)'
