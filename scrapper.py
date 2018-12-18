@@ -13,21 +13,10 @@ conn = pymysql.connect(
 )
 
 cur = conn.cursor()
-cur.execute('USE scraping')
-
-random.seed(datetime.datetime.now())
-
-
-def store(title, content):
-    cur.execute(
-        'INSERT INTO pages (title, content) VALUES (%s,%s)',
-        (title, content)
-    )
-    cur.connection.commit()
+cur.execute('USE wikipedia')
 
 
 def get_url(url):
-    print(url)
     try:
         html = urlopen(url)
     except HTTPError:
@@ -35,23 +24,52 @@ def get_url(url):
     return html
 
 
-def get_links(article_url):
-    html = get_url('http://en.wikipedia.org' + article_url)
+def insert_page_if_not_exists(url):
+    cur.execute('SELECT * FROM wikipedia.pages WHERE url = %s', url)
+    if cur.rowcount == 0:
+        cur.execute('INSERT INTO wikipedia.pages (url) VALUES (%s)', url)
+        conn.commit()
+        return cur.lastrowid
+    else:
+        return cur.fetchone()[0]
+
+
+def insert_link(from_page_id, to_page_id):
+    cur.execute(
+        'SELECT * FROM wikipedia.links WHERE fromPageId = %s AND toPageId = %s',
+        (int(from_page_id), int(to_page_id))
+    )
+    if cur.rowcount == 0:
+        cur.execute(
+            'INSERT INTO wikipedia.links (fromPageId, toPageId) VALUES (%s, %s)',
+            (int(from_page_id), int(to_page_id))
+        )
+        conn.commit()
+
+
+pages = set()
+
+
+def get_links(page_url, recursion_level):
+    global pages
+    if recursion_level > 4:
+        return
+    page_id = insert_page_if_not_exists(page_url)
+    html = get_url('http://en.wikipedia.org' + page_url)
     bs_obj = BeautifulSoup(html, 'html.parser')
-    title = bs_obj.find('h1').get_text()
-    content = bs_obj.find('div', {'id': 'mw-content-text'}).find('p').get_text()
-    if len(content) > 1:
-        store(title, content)
     expression = re.compile('^(/wiki/)((?!:).)*$')
-    return bs_obj.find('div', {'id': 'bodyContent'}).findAll('a', href=expression)
+    for link in bs_obj.find_all('a', href=expression):
+        insert_link(
+            page_id,
+            insert_page_if_not_exists(link.attrs['href'])
+        )
+        if link.attrs['href'] not in pages:
+            new_page = link.attrs['href']
+            pages.add(new_page)
+            get_links(new_page, recursion_level + 1)
 
 
-links = get_links('/wiki/Kevin_Bacon')
-try:
-    while len(links) > 0:
-        new_article = links[random.randint(0, len(links) - 1)].attrs['href']
-        print(new_article)
-        links = get_links(new_article)
-finally:
-    cur.close()
-    conn.close()
+get_links('/wiki/Kevin_Bacon', 0)
+
+cur.close()
+conn.close()
