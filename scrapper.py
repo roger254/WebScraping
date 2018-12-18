@@ -1,8 +1,7 @@
-import pymysql
-import datetime
-import random
 import re
 from urllib.request import urlopen, HTTPError
+
+import pymysql
 from bs4 import BeautifulSoup
 
 conn = pymysql.connect(
